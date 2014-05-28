@@ -1,0 +1,228 @@
+/*
+YUI 3.16.0 (build 76f0e08)
+Copyright 2014 Yahoo! Inc. All rights reserved.
+Licensed under the BSD License.
+http://yuilibrary.com/license/
+*/
+
+html{color:#000;background:#FFF}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit;*font-size:100%}legend{color:#000}#yui3-css-stamp.cssreset{display:none}
+
+/*
+ * Pedro's Behance webpage v0.1
+ * http://behance.net/thefzn
+ * http://github.com/thefzn
+ *
+ * Autor: Pedro Carrazco
+ *
+ * Date: 21/05/2014
+ */
+html, body{
+	background: url("../img/back.jpg") scroll no-repeat 50% 50% transparent;
+	/*background-size:100% 100%;*/
+	color:#6B6475;
+	font:14px/1.2 Arial, sans-serif;
+	height:100%;
+	margin:0;
+	padding:0;
+}
+section, nav{
+	display:none;
+}
+#container {
+	height:100%;
+}
+/* Main Profile */
+#Profile{
+	left:0;
+	margin:10px;
+	overflow:hidden;
+	position: fixed;
+	top: 0;
+}
+#Profile .profileImg{
+	border: 3px solid #6B6475;
+	border-radius: 50px;
+	float:left;
+	height:50px;
+	width:50px;
+}
+#Profile .profileData{
+	border-left:1px solid #6B6475;
+	float:left;
+	margin:3px 10px;
+	padding:0 10px;
+}
+#Profile .profileData h1{
+	font-size:16px;
+	font-weight:bold;
+	margin-bottom:5px;
+}
+#Profile .profileData p{
+	font-size:10px;
+}
+/* Main Menu */
+.navAligner{
+	left:50%;
+	margin-left:-125px;
+	position:absolute;
+	top:50%;
+}
+.navAligner #Menu{
+	background:url("../img/orn_menuTop.png") scroll no-repeat 50% 100% transparent;
+	margin-top:-50%;
+	padding-bottom:40px;
+	width:250px;
+}
+.navAligner #Menu #basic{
+	background:url("../img/orn_menuBottom.png") scroll no-repeat 50% 0 transparent;
+	padding-top:40px;
+}
+.navAligner #Menu #sections{
+	background:url("../img/orn_menuCenter.png") scroll no-repeat 50% 0 transparent;
+	margin-top:5px;
+	padding-top:10px;
+}
+.navAligner #Menu ul li,
+.navAligner #Menu ul{
+	list-style:none;
+}
+.navAligner #Menu ul li{
+	border-top:1px solid #FFFFFF;
+	cursor: pointer;
+	  -webkit-transition-duration: 0.5s;
+		 -moz-transition-duration: 0.5s;
+		  -ms-transition-duration: 0.5s;
+		   -o-transition-duration: 0.5s;
+			  transition-duration: 0.5s;
+}
+.navAligner #Menu ul li:hover{
+	background-color: rgba(0,0,0,0.1);
+}
+/* Menu Icon */
+#MenuIcon{
+	background:url("../img/icn_menu.png") scroll no-repeat 50% 50% transparent;
+	border-left:1px solid #6B6475;
+	cursor:pointer;
+	display:none;
+	height:48px;
+	margin: 13px 0 0;
+	position:fixed;
+	right:0;
+	top:0;
+	width: 65px;
+}
+/* Generic Message */
+.navAligner #Menu ul li,
+#Message .content h1,
+#Message .content h2{
+	font: 18px/1 Times New Roman, serif;
+	padding: 10px;
+	text-align:center;
+	text-transform:uppercase;
+}
+#Message .content .body{
+	overflow:auto;
+}
+#Message .content .body div{
+	height: auto;
+	margin: -1px 0 15px;
+	overflow:hidden;
+}
+#Message .content .body div h2{
+	border-top:1px solid white;
+	font: 14px/1 Times New Roman, serif;
+	font-weight: bold;
+	padding: 10px 0 0;
+	margin: 0 0 10px;
+}
+.navAligner #Menu ul li:first-child{
+	border:0 none;
+}
+#Message{
+	background:url("../img/orn_menuBottom.png") scroll no-repeat 50% 0 transparent;
+	bottom:20%;
+	left:10%;
+	position:absolute;
+	right:10%;
+	top:25%;
+}
+#Message .content{
+	border-bottom: 1px solid #6B6475;
+	margin: 15px 10px;
+	padding: 15px 0;
+	text-align:center;
+}
+#Message .content h1{
+	border-bottom: 1px solid #6B6475;
+	margin-bottom:15px;
+	padding:0 0 15px 0;
+}
+#Message .content p{
+	line-height:1.2;
+}
+/* Portfolio */
+#Portfolio{
+	position:relative;
+	top: 50%;
+	left: 50%;
+	width: 1px;
+	height: 1px;
+}
+#Portfolio .portfolio {
+	
+}
+#Portfolio .portfolio .portfolioItem{
+	background:url("../img/icn_portaSmall.png") no-repeat scroll 50% 50% transparent;
+	height: 45px;
+	padding: 6px 7px 7px;
+	position: absolute;
+	width: 57px;
+	  -webkit-transition-duration: 0.5s;
+		 -moz-transition-duration: 0.5s;
+		  -ms-transition-duration: 0.5s;
+		   -o-transition-duration: 0.5s;
+			  transition-duration: 0.5s;
+	filter:alpha(opacity=0);
+	opacity:0;
+}
+#Portfolio .portfolio .portfolioItem.visible{
+	filter:alpha(opacity=1);
+	opacity:1;
+}
+/* Filters */
+.filters {
+	position: fixed;
+	bottom: 5px;
+	width: 100%;
+	text-align:center;
+}
+.filtersItem {
+	background: url("../img/bg_tag.jpg") repeat scroll 0 0 #DEDCE3;
+	border: 1px solid #999999;
+	border-radius: 10px;
+	cursor: pointer;
+	display: inline-block;
+	font-size: 10px;
+	line-height:16px;
+	margin: 2px 5px;
+	padding: 0 3px 0 10px;
+	position:relative;
+	vertical-align:middle;
+}
+.filtersItem .state{
+	background: url("../img/icn_trag.png") repeat scroll 100% 0 transparent;
+	display: block;
+	float: right;
+	height: 13px;
+	margin: 2px 0 0 5px;
+	width: 13px;
+}
+.filtersItem.visible{
+	/*background: url("../img/bg_tagActive.jpg") repeat-x scroll 0 0 #B8E6DF;*/
+	background: url("") no-repeat scroll 0 0 #5690B6;
+	color: white;
+	border: 1px solid #165096;
+}
+.filtersItem.visible .state{
+	background-position: 100% 100%;
+}
