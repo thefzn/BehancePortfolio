@@ -12,6 +12,10 @@ PB = {
 	userID: "thefzn", // Default Behance User - Me
 	api: "https://www.behance.net/v2/",
 	key: "sSbSr1Gvrj1KLLWbgq3iKm9l3JLUlj3v",
+	defErrorMsg: "The connection failed or this section is under construction, please try again later.",
+	loading: "<img src='img/loading.gif' width='20' />",
+	msgSize: 0,
+	loadQueue: 0,
 	user: {
 		portfolio: {}
 	},
@@ -23,30 +27,35 @@ PB = {
 		this.userID = this.userID.replace("?","");
 		this.getProfile();
 		$(window).on("resize",PB.resize);
+		$("#loaderOverlay #loader").html(this.loading);
 	},
 	resize: function(){
-		var limit = $("body").height() - ($("body").height()/5 + 157),
+		var limit = ($("body").height() * 0.6)-60,
 			target = $("#Message .content .body"),
-			slimscroll = target.parent().hasClass("slimScrollDiv");
-		target = (slimscroll) ? target.parent() : target;
-		
-		if(target.height() >= (limit-10)){
-			if(slimscroll){
-				target.css("height", limit + "px");
-			}else{
-				target.slimscroll(limit);
-			}
+			slimscroll = target.parent().hasClass("slimScrollDiv"),
+			finalSize = Math.min(PB.msgSize,limit);
+		if(slimscroll){
+			target.height(finalSize);
+			target.parent().height(finalSize);
 		}else{
-			target.css("height","auto");
+			target.slimscroll({height:finalSize});
 		}
+		$("#Message").css("marginTop","-" + (($("#Message").height()/2) - 40) + "px");
 		
+		target = $("#Project .content .guide");
+		slimscroll = target.parent().hasClass("slimScrollDiv");
+		if(slimscroll){
+			finalSize = $("body").height()-125;
+			target.height(finalSize);
+			target.parent().height(finalSize);
+		}
 		if(PB.user.portfolio instanceof PB.classes.Portfolio){
 			PB.user.portfolio.resize();
 		}
 	},
 	getProfile: function(data){
-		var url = "users/" + this.userID + "?api_key=",
-			msg = "The user you are looking for doesn't exist.",
+		var url = "users/" + this.userID,
+			msg = "This is not the user you are looking for.",
 			success = function (data) {
 				PB.user = data.user;
 				PB.fillData();
@@ -54,59 +63,92 @@ PB = {
 		this.ajaxGet(url,msg,success);
 	},
 	getWork: function(){
-		var url = "users/" + this.userID + "/work_experience?client_id=",
-			msg = "This section is under construction, please try again later.",
+		var url = "users/" + this.userID + "/work_experience",
+			self = this,
 			success = function (data) {
 				PB.user.work=data.work_experience;
-				PB.actions.openWork();
+				if(PB.user.work.length > 0){
+					PB.actions.openWork();
+				}else{
+					PB.actions.displayMsg("Sorry!",PB.defErrorMsg);
+				}
 			};
 		if(typeof PB.user.work == "undefined"){
-			this.ajaxGet(url,msg,success);
+			this.ajaxGet(url,self.defErrorMsg,success);
 		}else{
 			$("#Menu").fadeOut(500);
 			PB.actions.openWork();
 		}
 	},
 	getPortfolio: function(){
-		var url = "users/" + this.userID + "/projects?client_id=",
-			msg = "The connection failed or this section is under construction, please try again later.",
+		var url = "users/" + this.userID + "/projects",
+			self = this,
 			success = function (data) {
 				if(data.projects.length < 1){
-					PB.actions.displayMsg("Warning!",msg);
+					PB.actions.displayMsg("Sorry!",self.defErrorMsg);
 				}else{
 					PB.actions.openPorta(data);
 				}
+				self = null;
 			};
 		if(PB.user.portfolio instanceof PB.classes.Portfolio){
 			if(PB.user.portfolio.items.length < 1){
-				PB.actions.displayMsg("Warning!",msg);
+				PB.actions.displayMsg("Sorry!",self.defErrorMsg);
 			}else{
 				$("#Menu").fadeOut(500,function(){
-					PB.user.portfolio.draw(true);
 					PB.user.portfolio.resize();
 					$("#Portfolio").fadeIn(250);
 					$("#Filters").fadeIn(250);
-					$("#MenuIcon").fadeIn(500);
+					$("#MenuIcon").removeClass("closed");
 				});
 			}
 			
 		}else{
-			this.ajaxGet(url,msg,success);
+			this.ajaxGet(url,self.defErrorMsg,success);
+		}
+	},
+	getProject: function(project,opener){
+		var url = "projects/" + project ,
+			self = this,
+			success = function (data) {
+				var data = data || false,
+					project = data.project || data || false;
+				if(!project){
+					PB.actions.displayMsg("Sorry!",self.defErrorMsg);
+				}else{
+					if(project instanceof PB.classes.Project){
+						opener.project.regenerate();
+					}else{
+						opener.project = new PB.classes.Project(project,"#Project");
+					}
+				}
+				opener = null;
+				self = null;
+			};
+		if(typeof opener.project != "undefined"){
+			success(opener.project);
+		}else{
+			this.ajaxGet(url,self.defErrorMsg,success);
 		}
 	},
 	ajaxGet: function(url,errorMsg,success){
 		$("#Menu").fadeOut(500);
+		$("#container #loaderOverlay").addClass("open");
 		$.ajax({
 			async: true,
-			url: this.api + url + this.key,
+			url: this.api + url + "?client_id=" + this.key + "&api_key=" + this.key,
 			dataType: 'jsonp',
 			method: "GET",
 			timeout: 3000,
 			error: function (jqXHR, textStatus, errorThrown) {
 				//included so you can see any errors
-				PB.actions.displayMsg("Warning!",errorMsg);
+				PB.actions.displayMsg("Sorry!",errorMsg);
+				$("#container #loaderOverlay").removeClass("open");
 			},
-			success: success
+			success: function(data){
+				success(data);
+				$("#container #loaderOverlay").removeClass("open");
+			}
 		});
 	},
 	fillData: function(){
@@ -147,12 +189,8 @@ PB = {
 		}
 		el.fadeIn(500);
 		el.find("li").on("click",this.actions.menuClick);
-		menuIcn.on("click",function(){
-			$("#Message,#Portfolio,#Filters").fadeOut(250,function(){
-				$("#Menu").fadeIn(250)
-			});
-			$(this).fadeOut(250);
-		});
+		$("#MenuIcon").addClass("closed");
+		menuIcn.on("click",PB.actions.backToMenu);
 	}
 }
 PB.actions = {
@@ -172,6 +210,16 @@ PB.actions = {
 					window.open("http://www.behance.net/"+PB.userID);
 				break;
 			}
+		}
+	},
+	backToMenu: function(){
+		$("#Message,#Portfolio,#Filters").fadeOut(250,function(){
+			$("#Menu").fadeIn(250)
+		});
+		$(this).addClass("closed");
+		$("#Project").removeClass("open");
+		if(typeof PB.user.portfolio != "undefined"){
+			PB.user.portfolio.opened = false;
 		}
 	},
 	openSection: function(el){
@@ -195,11 +243,13 @@ PB.actions = {
 			msg += "<h2>" + item.position + "</h2>";
 			msg += "At " + item.organization + " on " + item.location + "<br />";
 			timeStart = item.start_date || false;
-			timeEnd = item.end_date || false;
-			msg += "(";
-			msg += (timeStart) ? "from " + timeStart : "";
-			msg += (timeEnd) ? " to " + timeStart : "";
-			msg += ")"
+			timeEnd = (timeStart) ? item.end_date || "Present" : item.end_date || false;
+			if(timeStart && timeEnd){
+				msg += "(";
+				msg += (timeStart) ? "from " + timeStart : "";
+				msg += (timeEnd) ? " to " + timeEnd : "";
+				msg += ")"
+			}
 			msg += "</div>";
 		}
 		msg += "";
@@ -207,25 +257,55 @@ PB.actions = {
 	},
 	openPorta: function(data){
 		PB.user.portfolio = new PB.classes.Portfolio(data.projects);
-		$("#Portfolio").fadeIn(250);
+		$("#Portfolio,#Filters").fadeIn(250);
+		$("#MenuIcon").removeClass("closed");
+	},
+	openProject: function(project){
+		if(!project.collection.opened){
+			project.collection.circle.radius = project.collection.circle.radius * 3;
+			project.collection.displayItems(true);
+			project.collection.opened = true;
+			$("#Filters").fadeOut(250);
+			$("#Profile, #MenuIcon").addClass("closed");
+			PB.getProject(project.data.id,project);
+		}
+	},
+	closeProject: function(){
 		$("#Filters").fadeIn(250);
-		$("#MenuIcon").fadeIn(500);
+		$("#Profile, #MenuIcon").removeClass("closed");
+		$("#Project").removeClass("open");
+		if(typeof PB.user.portfolio != "undefined"){
+			PB.user.portfolio.opened = false;
+		}
+		PB.user.portfolio.resize();
 	},
 	displayMsg: function(header,text){
 		var msg = $("#Message"),
 			ico = $("#MenuIcon"),
+			prof = $("#Profile"),
 			title,cont;
 		header = header || false;
 		text = text || "";
 		
 		title = (header) ? "<h1>" + header + "</h1>" : "";
-		cont = "<div class='body'>" + text.replace(/\n/gi,"<br />") + "</div>";
+		cont = "<div class='body'><div class='spacer'>" + text.replace(/\n/gi,"<br />") + "</div></div>";
 		
 		msg.find(".content").html(title + " " + cont);
 		msg.fadeIn(500);
-		ico.fadeIn(250);
+		ico.removeClass("closed");
+		prof.removeClass("closed")
+		PB.msgSize = msg.find(".content .body").height();
 		PB.resize();
-	}
+	},
+	imageLoaded: function(src){
+		var target = $("#Project .content .guide"),
+			newH;
+		PB.loadQueue--;
+		if(PB.loadQueue <= 0){
+			var h = $("body").height()-125;
+			$("#Project .content .guide,#Project .content .slimScrollDiv").height(h);
+		}
+	},
 }
 PB.classes = {
 	Drawable: function(){
@@ -234,6 +314,9 @@ PB.classes = {
 		this.hasActions = false;
 		this.draw = function(skip){
 			var $el, $to;
+			if(skip){
+				return false;
+			}
 			this.$el = this.toJQ(this.el);
 			$to = this.toJQ(this.container);
 			this.$el.addClass(this.className);
@@ -282,12 +365,13 @@ PB.classes = {
 		this.collection = null;
 		this.data = null;
 		this.visible = true;
+		this.open = false;
 		this.$el = {};
 		this.pos = [0,0];
 		this.init = function(data,collection){
 			this.collection = collection;
 			this.data = data;
-			this.container = this.collection.container + " ." + this.collection.className;
+			this.container = (typeof this.collection == "object") ? this.collection.container + " ." + this.collection.className : this.collection;
 		}
 		this.action = function(){};
 	},
@@ -295,6 +379,7 @@ PB.classes = {
 		this.className = name.toLowerCase();
 		this.container = "#" + this.className[0].toUpperCase() + this.className.substr(1);
 		this.radial = radial || false;
+		this.opened = false;
 		this.circle = {
 			radius: 150,
 			items:0,
@@ -379,19 +464,21 @@ PB.classes = {
 		};
 		this.reCalculate = function(len,container){
 			var container = container || "body",
-				bodyWidth = this.toJQ(container).width() / 2.8,
-				bodyHeight = (this.toJQ(container).height() - 150) / 2.8,
+				rel = 2.8,
+				bodyWidth = this.toJQ(container).width(),
+				bodyHeight = this.toJQ(container).height(),
 				len = len || false;
 			this.circle.items = len || this.circle.items;
 			this.circle.angleStep = 360 / this.circle.items;
-			this.circle.radius = Math.min(bodyWidth,bodyHeight,180);
+			this.circle.radius = Math.min(bodyWidth/rel,(bodyHeight - 150)/rel,180);
+			this.circle.radius = (this.opened) ? Math.max(bodyWidth,bodyHeight) * 1.5 : this.circle.radius;
 		};
 		this.init = function(data,err){
 			var err = err || false;
 			if(!(data instanceof Array)){
 				console.log("Data must be an Array");
 				if(err){
-					PB.actions.displayMsg("Warning!","Data not found... Please try again later.");
+					PB.actions.displayMsg("Sorry!","Data not found... Please try again later.");
 				}
 				return false;
 			}
@@ -424,6 +511,9 @@ PB.classes = {
 		this.fill = function(){
 			this.$el.html("<img src='" + this.data.covers[115] + "' width='" + this.$el.css("width") + "' height='" + this.$el.css("height") + "' />");
 		};
+		this.action = function(){
+			PB.actions.openProject(this)
+		};
 		this.init(data,collection);
 	},
 	Portfolio: function(data){
@@ -452,11 +542,116 @@ PB.classes = {
 	},
 	Filters: function(data){
 		this.init(data);
+	},
+	Project: function(data, collection){
+		this.fill = function(){
+			var html = "",
+				pjt = this.data || {modules:[]},
+				mods = pjt.modules || [],
+				i = 0,
+				len = mods.length,
+				styles = this.data.styles,
+				sCaption = "",
+				header = "",
+				mod,w,img,cont;
+			if(!(this.closeBtn instanceof jQuery)){
+				this.closeBtn = $("<div id='close'>");
+			}
+			this.closeBtn.on("click",PB.actions.closeProject);
+			header += "<div class='projectTitle'>";
+			header += "<div class='projectImg' style='background-image:url(" + pjt.covers[115] + ");'></div>";
+			header += "<div class='projectData'>";
+			header += "<h1 class='title'>" + pjt.name + "</h1>" + "<p>" + pjt.description + "</p>"
+			header += "</div></div>"
+			PB.loadQueue = 0;
+			html += "<div class='content'><div class='guide'>";
+			for(; i < len; i++){
+				mod = pjt.modules[i];
+				if(mod.type == "text"){
+					html += mod.text;
+				}else if(mod.type == "image"){
+					w = Math.min(parseInt(mod.width),($("body").width()-30));
+					sCaption = mod.caption_plain || false;
+					PB.loadQueue++;
+					img = new Image();
+					img.onload = function(){setTimeout(PB.actions.imageLoaded(),100);};
+					img.src = mod.src;
+					img.width = w;
+					html += "<div class='main-image'>";
+					html += img.outerHTML;
+					html += (sCaption) ? "<span class='caption'>" + sCaption + "</span>" : "";
+					html += "</div>";
+				}
+			}
+			html += "</div></div>";
+			this.$el.prepend(this.closeBtn);
+			this.$el.append(header);
+			this.$el.append(html);
+			this.applyStyles(pjt.styles);
+			var h = $("body").height()-125;
+			$("#Project .content .guide").slimscroll({height:h});
+			html = null;
+			img = null;
+			w = null;
+			PB.resize();
+		};
+		this.init(data,collection);
+		this.regenerate = function(){
+			$(this.container).empty();
+			this.draw();
+			this.fill();
+			$("#Project").addClass("open");
+		};
+		this.applyStyles = function(styles){
+			var styles = styles || {},
+				text = styles.text || {},
+				back = styles.background || {},
+				p = this.formatStyles(text.paragraph) || {},
+				a = this.formatStyles(text.link) || {},
+				sub = this.formatStyles(text.subtitle) || {},
+				tit = this.formatStyles(text.title) || {},
+				cap = this.formatStyles(text.caption) || {},
+				c = "#" + back.color;
+			
+			this.$el.find(".content p").css(p);
+			this.$el.find(".content a").css(a);
+			this.$el.find(".content .sub-title").css(sub);
+			this.$el.find(".content .title").css(tit);
+			this.$el.find(".content .caption").css(cap);
+			this.$el.find(".content").css(p);
+			
+			this.$el.css("background-color",c);
+			
+		};
+		this.formatStyles = function(o){
+			var target = o || false,
+				temp = {},
+				n,nAlt,i,j,nAr,len;
+			if(!target){
+				return false;
+			}
+			for(n in target){
+				i = n.indexOf("_")
+				if(i >= 0){
+					nAr = n.split("_");
+					nAlt = nAr[0];
+					for(j = 1, len = nAr.length; j < len; j++){
+						nAlt += nAr[j].charAt(0).toUpperCase() + nAr[j].substr(1);
+					}
+					temp[nAlt] = target[n];
+				}else{
+					temp[n] = target[n];
+				}
+			}
+			return temp;
+		}
+		this.regenerate();
 	}
 }
 PB.classes.Collection.prototype = new PB.classes.Drawable();
 PB.classes.Item.prototype = new PB.classes.Drawable();
 PB.classes.PortfolioItem.prototype = new PB.classes.Item("Portfolio");
 PB.classes.FiltersItem.prototype = new PB.classes.Item("Filters");
+PB.classes.Project.prototype = new PB.classes.Item("Project");
 PB.classes.Portfolio.prototype = new PB.classes.Collection("Portfolio",true);
 PB.classes.Filters.prototype = new PB.classes.Collection("Filters");
