@@ -11,4 +11,4 @@ Change Log
 - 1.1.0
   - Updated with Hash navigation, now, the user can share the app with an specific section opened by default.
   - Navigation enhanced.
-  - Code cleaned up. is still pending.
+  - Code cleaned up is stil pending.
