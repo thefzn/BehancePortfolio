@@ -20,6 +20,7 @@ PB = {
 		portfolio: {}
 	},
 	launch: function(){
+		var self = this;
 		if(typeof $ == "undefined"){
 			return false;
 		}
@@ -80,29 +81,22 @@ PB = {
 			PB.actions.openWork();
 		}
 	},
-	getPortfolio: function(){
+	getPortfolio: function(sub){
 		var url = "users/" + this.userID + "/projects",
 			self = this,
+			sub = sub || false,
 			success = function (data) {
-				if(data.projects.length < 1){
+				var data = data || {},
+					items = data.projects || PB.user.portfolio.items;
+				if(items.length < 1){
 					PB.actions.displayMsg("Sorry!",self.defErrorMsg);
 				}else{
-					PB.actions.openPorta(data);
+					PB.actions.openPorta(data,sub);
 				}
 				self = null;
 			};
 		if(PB.user.portfolio instanceof PB.classes.Portfolio){
-			if(PB.user.portfolio.items.length < 1){
-				PB.actions.displayMsg("Sorry!",self.defErrorMsg);
-			}else{
-				$("#Menu").fadeOut(500,function(){
-					PB.user.portfolio.resize();
-					$("#Portfolio").fadeIn(250);
-					$("#Filters").fadeIn(250);
-					$("#MenuIcon").removeClass("closed");
-				});
-			}
-			
+			success();
 		}else{
 			this.ajaxGet(url,self.defErrorMsg,success);
 		}
@@ -153,6 +147,7 @@ PB = {
 	},
 	fillData: function(){
 		var el, sec, img, data,
+			self = this,
 			menuIcn = $("#MenuIcon"),
 			theUser = {
 				name: this.user.display_name || this.userID,
@@ -179,7 +174,7 @@ PB = {
 		el.append(data);
 		data.append("<li class='portfolio'>Portfolio</li>");
 		data.append("<li class='contact'>Work Experience</li>");
-		data.append("<li class='behance'>Behance Portfolio</li>");
+		data.append("<li class='behance'><a href='http://www.behance.net/" + PB.userID + "' target='_blank'>Behance Portfolio</a></li>");
 		if(!(PB.user.sections instanceof Array)){
 			data = $("<ul id='sections'>");
 			el.append(data);
@@ -187,46 +182,38 @@ PB = {
 				data.append("<li class='section'>" + sec + "</li>");
 			}
 		}
-		el.fadeIn(500);
-		el.find("li").on("click",this.actions.menuClick);
 		$("#MenuIcon").addClass("closed");
-		menuIcn.on("click",PB.actions.backToMenu);
+		el.fadeIn(500);
+		el.find("li").on("click",function(){
+			var $el = $(this),
+				nav = "";
+			nav += $el.text();
+			self.actions.nav.set(nav);
+		});
+		menuIcn.on("click",function (){PB.actions.nav.set()});
+		PB.actions.nav.check();
 	}
 }
 PB.actions = {
-	menuClick: function(){
-		var el = $(this);
-		if(el.hasClass("section")){
-			PB.actions.openSection(el);
-		}else{
-			switch(el.text()){
-				case "Portfolio":
-					PB.getPortfolio();
-				break;
-				case "Work Experience":
-					PB.getWork();
-				break;
-				default:
-					window.open("http://www.behance.net/"+PB.userID);
-				break;
-			}
-		}
-	},
 	backToMenu: function(){
 		$("#Message,#Portfolio,#Filters").fadeOut(250,function(){
 			$("#Menu").fadeIn(250)
 		});
-		$(this).addClass("closed");
+		$("#MenuIcon").addClass("closed");
 		$("#Project").removeClass("open");
 		if(typeof PB.user.portfolio != "undefined"){
 			PB.user.portfolio.opened = false;
 		}
 	},
-	openSection: function(el){
-		var text = PB.user.sections[el.text()];
+	openSection: function(s){
+		var text = PB.user.sections[s] || false;
 		
 		$("#Menu").fadeOut(500,function(){
-			PB.actions.displayMsg(el.text(),text);
+			if(text){
+					PB.actions.displayMsg(s,text);
+			}else{
+				PB.actions.displayMsg("Sorry","Section not found");
+			}
 		});
 	},
 	openWork: function(){
@@ -255,34 +242,66 @@ PB.actions = {
 		msg += "";
 		PB.actions.displayMsg(title,msg);
 	},
-	openPorta: function(data){
-		PB.user.portfolio = new PB.classes.Portfolio(data.projects);
-		$("#Portfolio,#Filters").fadeIn(250);
+	openPorta: function(data,sub){
+		if(!(PB.user.portfolio)){
+			PB.user.portfolio = new PB.classes.Portfolio(data.projects);
+		}
+		$("#Menu,#Message").fadeOut(500);
+		$("#Portfolio,#Filters").fadeIn(500);
 		$("#MenuIcon").removeClass("closed");
+		if(!sub){
+			PB.user.portfolio.resize();
+		}else{
+			PB.actions.searchProject(sub);
+		}
 	},
 	openProject: function(project){
 		if(!project.collection.opened){
-			project.collection.circle.radius = project.collection.circle.radius * 3;
-			project.collection.displayItems(true);
-			project.collection.opened = true;
-			$("#Filters").fadeOut(250);
-			$("#Profile, #MenuIcon").addClass("closed");
-			PB.getProject(project.data.id,project);
+			PB.actions.closeProject();
 		}
+		project.collection.circle.radius = project.collection.circle.radius * 3;
+		project.collection.displayItems(true);
+		project.collection.opened = true;
+		$("#Filters").fadeOut(250);
+		$("#Profile, #MenuIcon").addClass("closed");
+		PB.getProject(project.data.id,project);
 	},
 	closeProject: function(){
-		$("#Filters").fadeIn(250);
+		//$("#Filters").fadeIn(250);
 		$("#Profile, #MenuIcon").removeClass("closed");
 		$("#Project").removeClass("open");
 		if(typeof PB.user.portfolio != "undefined"){
 			PB.user.portfolio.opened = false;
+			PB.user.portfolio.resize();
 		}
-		PB.user.portfolio.resize();
+	},
+	searchProject: function(id){
+		var port = PB.user.portfolio || false,
+			items = port.items || [],
+			i=0,
+			len=items.length,
+			found = false,
+			itm;
+		if(port){
+			for(; i < len; i++){
+				itm = items[i];
+				if(itm.data.id == id){
+					found = true;
+					break;
+				}
+			}
+			if(found){
+				PB.actions.openProject(itm);
+			}else{
+				PB.actions.displayMsg("Sorry!","Project not found.");
+			}
+		}
 	},
 	displayMsg: function(header,text){
 		var msg = $("#Message"),
 			ico = $("#MenuIcon"),
 			prof = $("#Profile"),
+			port = $("#Portfolio,#Filters"),
 			title,cont;
 		header = header || false;
 		text = text || "";
@@ -292,6 +311,8 @@ PB.actions = {
 		
 		msg.find(".content").html(title + " " + cont);
 		msg.fadeIn(500);
+		port.fadeOut(250);
+		this.closeProject();
 		ico.removeClass("closed");
 		prof.removeClass("closed")
 		PB.msgSize = msg.find(".content .body").height();
@@ -306,6 +327,63 @@ PB.actions = {
 			$("#Project .content .guide,#Project .content .slimScrollDiv").height(h);
 		}
 	},
+	nav: {
+		path:[],
+		prev: "",
+		check: function(){
+			var self = PB.actions.nav,
+				hash = self.get();
+			if(hash != self.prev){
+				self.set(hash);
+				self.go(hash);
+			}
+			setTimeout(PB.actions.nav.check,500);
+		},
+		set: function(path){
+			path = (typeof path == "string") ? path : false;
+			if (path){
+				this.path = path.split("/");
+				window.location.hash = "#/" + path;
+			}else{
+				this.path = [false];
+				window.location.hash = "";
+			}
+		},
+		get: function(){
+			var hash = window.location.hash || "";
+			hash = hash.replace("#/","");
+			return hash || false;
+		},
+		go: function(){
+			var s = this.path[0] || this.get(),
+				sub = this.path[1] || false,
+				proj;
+			if(s){
+				switch(s){
+					case "Portfolio":
+						if(!sub){
+							PB.getPortfolio();
+							PB.actions.closeProject();
+						}else{
+							proj = PB.getPortfolio(sub);
+						}
+					break;
+					case "Work Experience":
+						PB.getWork();
+					break;
+					case "Behance Portfolio":
+						//window.open("http://www.behance.net/"+PB.userID);
+						this.set();
+					break;
+					default:
+						PB.actions.openSection(s)
+				}
+			}else{
+				PB.actions.backToMenu();
+			}
+			this.prev = this.path.join("/");
+		}
+	}
 }
 PB.classes = {
 	Drawable: function(){
@@ -512,15 +590,17 @@ PB.classes = {
 			this.$el.html("<img src='" + this.data.covers[115] + "' width='" + this.$el.css("width") + "' height='" + this.$el.css("height") + "' />");
 		};
 		this.action = function(){
-			PB.actions.openProject(this)
+			PB.actions.nav.set("Portfolio/"+this.data.id);
 		};
 		this.init(data,collection);
 	},
 	Portfolio: function(data){
 		this.filters = {};
 		this.handleData = function(filters,len){
-			this.filters = new PB.classes.Filters(filters);
-			this.circle.items = len;
+			if(!(this.filters instanceof PB.classes.Filters)){
+				this.filters = new PB.classes.Filters(filters);
+				this.circle.items = len;
+			}
 		};
 		this.applyFilters = function(){
 			this.circle.items = this.countVisible();
@@ -557,7 +637,9 @@ PB.classes = {
 			if(!(this.closeBtn instanceof jQuery)){
 				this.closeBtn = $("<div id='close'>");
 			}
-			this.closeBtn.on("click",PB.actions.closeProject);
+			this.closeBtn.on("click",function(){
+				PB.actions.nav.set("Portfolio");
+			});
 			header += "<div class='projectTitle'>";
 			header += "<div class='projectImg' style='background-image:url(" + pjt.covers[115] + ");'></div>";
 			header += "<div class='projectData'>";
