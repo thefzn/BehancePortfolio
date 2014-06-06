@@ -95,18 +95,29 @@ section, nav{
 	padding-top:10px;
 }
 .aligner #Menu ul li,
+.aligner #Menu ul li.behance a,
 .aligner #Menu ul{
 	list-style:none;
+	display: block;
 }
-.aligner #Menu ul li{
+.aligner #Menu ul li,
+.aligner #Menu ul li.behance a{
 	border-top:1px dashed #6B6475;
 	cursor: pointer;
 }
-.aligner #Menu ul li:hover{
+.aligner #Menu ul li:hover,
+.aligner #Menu ul li.behance a:hover{
 	background-color: rgba(0,0,0,0.1);
 }
 .aligner #Menu ul li:first-child{
 	border:0 none;
+}
+.aligner #Menu ul li.behance{
+	padding:0;
+	border: 0 none;
+}
+.aligner #Menu ul li.behance:hover{
+	background-color:transparent;
 }
 /* Menu Icon */
 #MenuIcon,
@@ -143,11 +154,14 @@ section, nav{
 	width: 100%;
 }
 .aligner #Menu ul li,
+.aligner #Menu ul li.behance a,
 #Message .content h1,
 #Message .content h2{
+	color: #6B6475;
 	font: 18px/1 Times New Roman, serif;
 	padding: 10px;
 	text-align:center;
+	text-decoration: none;
 	text-transform:uppercase;
 }
 #Message .content .body{
