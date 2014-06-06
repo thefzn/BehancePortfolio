@@ -8,7 +8,8 @@
  * Date: 21/05/2014
  */
  
-PB = {
+ "use strict";
+var PB = {
 	userID: "thefzn", // Default Behance User - Me
 	api: "https://www.behance.net/v2/",
 	key: "sSbSr1Gvrj1KLLWbgq3iKm9l3JLUlj3v",
@@ -402,7 +403,6 @@ PB.classes = {
 				$to.append(this.$el);
 			}
 			this.drawn = true;
-			to = null;
 			$to = null;
 		};
 		this.toJQ = function(itm){
@@ -570,7 +570,7 @@ PB.classes = {
 	PortfolioItem: function(data,collection){
 		this.checkVisible = function(){
 			var i = 0,
-				f = this.data.fields
+				f = this.data.fields,
 				len = f.length;
 			this.visible = false;
 			for( ; i < len ; i++){
@@ -737,3 +737,7 @@ PB.classes.FiltersItem.prototype = new PB.classes.Item("Filters");
 PB.classes.Project.prototype = new PB.classes.Item("Project");
 PB.classes.Portfolio.prototype = new PB.classes.Collection("Portfolio",true);
 PB.classes.Filters.prototype = new PB.classes.Collection("Filters");
+
+$(window).load(function(){
+	PB.launch();
+})
