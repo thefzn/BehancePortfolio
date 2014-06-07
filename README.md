@@ -10,7 +10,7 @@ Demo: https://googledrive.com/host/0ByN6pVgjz4WaVFZJYnV4ZGtyVHM/?thefzn
 
 It is also posible to share the portfolio with an specific section opened by default by adding it to the URL as a hash parameter (yourHost.com/index.html?queryString#hashParameter).
 
-Demo: https://googledrive.com/host/0ByN6pVgjz4WaVFZJYnV4ZGtyVHM/?thefzn#Portfolio  (Not working yet... need to update the demo to v1.1.0)
+Demo: https://googledrive.com/host/0ByN6pVgjz4WaVFZJYnV4ZGtyVHM/?thefzn#/Portfolio
 
 
 ###Change Log
